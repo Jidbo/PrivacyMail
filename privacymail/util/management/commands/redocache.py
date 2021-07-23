@@ -3,22 +3,25 @@ from django.core.cache import cache
 from identity.models import Service
 from mailfetcher.models import Thirdparty
 import multiprocessing
-from itertools import repeat
-from mailfetcher.analyser_cron import (
-    create_service_cache,
-    create_summary_cache,
-    create_third_party_cache,
-    multiprocessing_create_service_cache,
-    multiprocessing_create_thirdparty_cache
-)
+from mailfetcher.analyser_cron import (create_summary_cache,
+                                       create_service_cache,
+                                       create_third_party_cache)
 from django.db import connections
-import time
 from contextlib import closing
+
+
 class Command(BaseCommand):
-    def handle(self, *args, **kwargs):
-        t1 = time.time()
-        cache.clear()
-        self.stdout.write("Cleared cache\n")
+    def add_arguments(self, parser):
+        parser.add_argument('--no-clear',
+                            action="store_true",
+                            dest="no-clear",
+                            help="Don't clear cache before redoing it.")
+
+    def handle(self, *args, **options):
+
+        if not options['no-clear']:
+            cache.clear()
+            self.stdout.write("Cleared cache\n")
 
         create_summary_cache(force=True)
         if multiprocessing.cpu_count() > 3:
@@ -26,11 +29,23 @@ class Command(BaseCommand):
         else:
             cpus = 1
 
+        print("Creating cache for services")
         with closing(multiprocessing.Pool(cpus, maxtasksperchild=1)) as p:
             p.map(multiprocessing_create_service_cache, Service.objects.all())
         connections.close_all()
+
+        print("Creating cache for thirdparties")
         with closing(multiprocessing.Pool(cpus, maxtasksperchild=1)) as p:
-            p.map(multiprocessing_create_thirdparty_cache, Thirdparty.objects.all())
-        t2 = time.time()
-        print(t2 - t1)
+            p.map(multiprocessing_create_thirdparty_cache,
+                  Thirdparty.objects.all())
         print("Done")
+
+
+def multiprocessing_create_service_cache(service):
+    connections.close_all()
+    create_service_cache(service, True)
+
+
+def multiprocessing_create_thirdparty_cache(thirdparty):
+    connections.close_all()
+    create_third_party_cache(thirdparty, True)
