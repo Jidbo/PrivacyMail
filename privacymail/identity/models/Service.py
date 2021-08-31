@@ -1,12 +1,9 @@
-import random
-import names
 from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
 from django.core import exceptions
 from django.db import models
 from django_countries.fields import CountryField
 from identity.util import convertForJsonResponse
-from model_utils import Choices
 
 
 class Service(models.Model):

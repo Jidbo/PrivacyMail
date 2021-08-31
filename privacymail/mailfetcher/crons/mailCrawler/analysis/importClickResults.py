@@ -1,5 +1,5 @@
 import tldextract
-from mailfetcher.models import Mail, Eresource
+from mailfetcher.models import Eresource
 import hashlib
 
 
@@ -25,7 +25,7 @@ def import_openwpmresults_click(url, mail, db_cursor):
     )
 
     openWPM_entries = db_cursor.fetchall()
-    num_openWpm_entries = len(openWPM_entries)
+    # num_openWpm_entries = len(openWPM_entries)
 
     # check whether the final url is from the service. If not discard this chain.
     service_url = ""

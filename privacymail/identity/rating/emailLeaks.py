@@ -1,6 +1,7 @@
 from identity.rating.calculate import scaleToRating, calculateRating
 from identity.models import Identity
 
+
 def calculateSpam(service):
     if Identity.objects.filter(service=service, receives_third_party_spam=True).count() > 0:
         return 1

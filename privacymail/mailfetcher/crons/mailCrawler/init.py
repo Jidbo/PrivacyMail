@@ -12,12 +12,14 @@ def check_socket(host, port):
         else:
             return False
 
+
 # This initizes the cronjob server
 def init():
     cache.delete("ImapFetcher")
 
     PORT = 5000
     DIRECTORY = "/tmp/"
+
     class Handler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=DIRECTORY, **kwargs)
@@ -27,6 +29,7 @@ def init():
         return server, startThread(server)
     else:
         return None, None
+
 
 def startThread(server):
     # This function serves email messages as small websites
@@ -38,3 +41,4 @@ def startThread(server):
     print("--- WEB Server started on port 5000 ---")
 
     return thread
+

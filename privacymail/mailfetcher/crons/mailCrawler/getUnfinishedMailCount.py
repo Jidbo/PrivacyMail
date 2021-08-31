@@ -2,6 +2,7 @@ from mailfetcher.models import Mail
 
 from django.conf import settings
 
+
 # Check whether there are too many mail in the database waiting to be processed.
 def getUnfinishedMailCount():
     viewed_mails = (
@@ -37,3 +38,4 @@ def getUnfinishedMailCount():
     )
 
     return unfinished_mail_count
+

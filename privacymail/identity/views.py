@@ -1,26 +1,19 @@
-import site
-
 from django.shortcuts import render
 from django.views.generic import View
-from identity.rating.rating import getAdjustedRating
 from identity.util import validate_domain, convertForJsonResponse
 from identity.models import Identity, Service, ServiceThirdPartyEmbeds
 from django.http import HttpResponseNotFound
 from identity.filters import ServiceFilter
 from identity.tables import ServiceTable
-from mailfetcher.models import Mail, Eresource, Thirdparty
+from mailfetcher.models import Mail, Thirdparty
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.cache import cache
 from django.shortcuts import redirect
-from django.db.models import Count
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableMixin
-from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from mailfetcher import analyser_cron
-from . import forms
 from mailfetcher.analyser_cron import create_service_cache
-from identity import checks
 import logging
 import time
 import json
@@ -46,6 +39,7 @@ class StatisticView(View):
     def get(self, request, *args, **kwargs):
         # Get the last approved services
         return JsonResponse({"global_stats": self.get_global_stats()})
+
 
 class IdentityView(View):
     @method_decorator(csrf_exempt)
@@ -203,7 +197,8 @@ class ServiceView(View):
                 extra={"request": request, "service_id": service.id},
             )
             # Display a warning that the cache isn't up to date
-            # TODO We probably also want to mark the service as dirty to ensure its generated, just in case stuff went wrong somewhere
+            # TODO We probably also want to mark the service as dirty to ensure its generated, just in case
+            # stuff went wrong somewhere
             return render(
                 request,
                 "identity/service.html",
@@ -250,7 +245,6 @@ class ServiceView(View):
         service_3p_conns = ServiceThirdPartyEmbeds.objects.filter(service=service)
         third_party_conns_setting_cookies = service_3p_conns.filter(sets_cookie=True)
         third_parties = service.thirdparties.distinct()
-
 
         site_params["service"] = service
         # site_params["num_different_idents"] = identities.count()

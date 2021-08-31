@@ -1,8 +1,8 @@
-from mailfetcher.models import Mail, Eresource
+from mailfetcher.models import Mail
 from django.conf import settings
 import os
 from OpenWPM.openwpm import CommandSequence, TaskManager
-from django.db import connection, models
+from django.db import connection
 
 from mailfetcher.crons.mailCrawler.analysis.importClickResults import (
     import_openwpmresults_click,

@@ -33,3 +33,4 @@ def analyze_eresource(eresource, hashdict):
                 if key in eresource["mail_leakage"]:
                     continue
                 eresource["mail_leakage"] = eresource["mail_leakage"] + ", " + key
+

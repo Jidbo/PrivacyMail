@@ -1,21 +1,20 @@
 from django.conf import settings
 import os
 import tempfile
-from mailfetcher.models import Mail, Eresource
+from mailfetcher.models import Mail
 from OpenWPM.openwpm import CommandSequence, TaskManager
 import sqlite3 as lite
-from multiprocessing import Process
 
-from django.db import connection, models
+from django.db import connection
 from mailfetcher.crons.mailCrawler.analysis.importViewResults import (
     import_openwpmresults,
     import_openwpmresults_single_mail,
 )
-import time
 import uuid
 
+
 def call_openwpm_view_single_mail(mail):
-    db_name =str(uuid.uuid4()) + ".sql"
+    db_name = str(uuid.uuid4()) + ".sql"
 
     wpm_db = settings.OPENWPM_DATA_DIR + db_name
     if os.path.exists(wpm_db):
@@ -37,6 +36,7 @@ def call_openwpm_view_single_mail(mail):
         if not settings.DEVELOP_ENVIRONMENT:
             os.remove(wpm_db)
     return eresources
+
 
 def call_openwpm_view_mail(mailQueue):
     # View a queue of emails with OpenWPM and save the observed connections
@@ -156,3 +156,4 @@ def visit_site(site, manager):
 
     # index=None browsers visit sites asynchronously
     manager.execute_command_sequence(command_sequence, index=None)
+

@@ -253,8 +253,6 @@ UNSUBSCRIBE_LINK_DICT = [
     "annu",  # annulla italian, annuler french
     "canc",  # cancel and cancellarsi italian
     "disdici",  # italian
-    #'qui',  # here in italian
-    #'ici',  # here in french
     "dés",  # french
     "abonn",  # abonn french
     "retiré",  # french

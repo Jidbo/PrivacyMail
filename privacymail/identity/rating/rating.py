@@ -7,7 +7,7 @@ from identity.rating.ABTesting import calculateABTesting
 from identity.rating.calculate import calculateRating, calculateAccumulativeRating
 
 
-from identity.models import  ServiceThirdPartyEmbeds
+from identity.models import ServiceThirdPartyEmbeds
 
 
 from identity.models import Identity
@@ -15,7 +15,6 @@ from mailfetcher.models import Mail
 
 
 import time
-from datetime import datetime, timedelta
 from django.utils import timezone
 
 minRating = 1

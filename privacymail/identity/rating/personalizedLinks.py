@@ -4,28 +4,27 @@ from identity.rating.calculate import (
     countToRating,
 )
 from django.db.models import Q
-from identity.util import filterDict
 from identity.models import ServiceThirdPartyEmbeds
 
 
-def calculatePersonalizedLinksToOwnWebsite(embeds,service, rMin, rMax):
+def calculatePersonalizedLinksToOwnWebsite(embeds, service, rMin, rMax):
     if embeds.filter(
         (Q(embed_type=ServiceThirdPartyEmbeds.ONCLICK) | Q(embed_type=ServiceThirdPartyEmbeds.STATIC)) &
-        Q(thirdparty__name=service.name) & 
+        Q(thirdparty__name=service.name) &
         Q(receives_identifier=True)
-        ).count() >= 1:
+    ).count() >= 1:
         return 1
     else:
         return 0
 
 
 def calculatePersonalizedLinksThirdParties(
-    embeds,service, rMin, rMax
+    embeds, service, rMin, rMax
 ):  # TODO should I filter the links to the newsletters own site?
     return countToRating(
         embeds.filter(
             (Q(embed_type=ServiceThirdPartyEmbeds.ONCLICK) | Q(embed_type=ServiceThirdPartyEmbeds.STATIC)) &
-            ~Q(thirdparty__name=service.name) & 
+            ~Q(thirdparty__name=service.name) &
             Q(receives_identifier=True)
         ).count(),
         rMin,
@@ -33,12 +32,12 @@ def calculatePersonalizedLinksThirdParties(
     )
 
 
-def calculatePersonalizedLinks(embeds,service, weights, rMin, rMax):
+def calculatePersonalizedLinks(embeds, service, weights, rMin, rMax):
     categories = {
         "toOwnWebsite": {
             "rating": scaleToRating(
                 calculatePersonalizedLinksToOwnWebsite(
-                    embeds,service, rMin["toOwnWebsite"], rMax["toOwnWebsite"],
+                    embeds, service, rMin["toOwnWebsite"], rMax["toOwnWebsite"],
                 ),
                 rMax["toOwnWebsite"],
             ),
@@ -47,7 +46,7 @@ def calculatePersonalizedLinks(embeds,service, weights, rMin, rMax):
         "toThirdParties": {
             "rating": scaleToRating(
                 calculatePersonalizedLinksThirdParties(
-                    embeds,service, rMin["toThirdParties"], rMax["toThirdParties"]
+                    embeds, service, rMin["toThirdParties"], rMax["toThirdParties"]
                 ),
                 rMax["toThirdParties"],
             ),

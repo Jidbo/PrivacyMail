@@ -1,6 +1,7 @@
-from mailfetcher.models import Mail, Eresource
+from mailfetcher.models import Eresource
 import hashlib
 import time
+
 
 def import_openwpmresults_single_mail(filename, db_cursor):
     openWPM_entries, _ = read_openWPM(filename, db_cursor)
@@ -88,7 +89,7 @@ def import_openwpmresults(filename, mail, db_cursor):
         is_start_of_chain = False
         if db_cursor.fetchone() is None:
             is_start_of_chain = True
-        
+
         # eresource is end of chain
         if redirects_to is None or redirects_to == "":
             r, created = Eresource.objects.get_or_create(
