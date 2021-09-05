@@ -3,9 +3,8 @@ from django.core.cache import cache
 from identity.models import Service
 from mailfetcher.models import Thirdparty
 import multiprocessing
-from mailfetcher.analyser_cron import (create_summary_cache,
-                                       create_service_cache,
-                                       create_third_party_cache)
+from mailfetcher.crons.mailCrawler.createCaches import (
+    create_summary_cache, create_service_cache, create_third_party_cache)
 from django.db import connections
 from contextlib import closing
 
