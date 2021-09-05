@@ -113,4 +113,3 @@ class AnalysisView(View):
                 queue.pop(analysis_id, None)
                 cache.set("onDemand_analysis_queue", queue)
                 raise
-

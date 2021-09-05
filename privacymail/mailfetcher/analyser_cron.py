@@ -3,7 +3,7 @@ import logging
 from django_cron import CronJobBase, Schedule
 from django.db import connections
 from datetime import date
-from createCaches import create_service_cache
+from mailfetcher.crons.mailCrawler.createCaches import create_service_cache
 from identity.models import Identity, Service
 from multiprocessing import cpu_count, Pool
 from contextlib import closing

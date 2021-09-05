@@ -126,7 +126,7 @@ CACHES = {
         "LOCATION": "pmail_cache",
         "TIMEOUT": None,  # Cache does not automatically expire
         "OPTIONS": {
-            "MAX_ENTRIES": 10000,  # Allow a lot of entries in the cache to avoid culling
+            "MAX_ENTRIES": 1000000,  # Allow a lot of entries in the cache to avoid culling
         },
     }
 }
