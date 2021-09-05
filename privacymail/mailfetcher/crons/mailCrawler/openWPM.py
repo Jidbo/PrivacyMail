@@ -3,7 +3,7 @@ import signal
 import os
 import email
 import time
-from mailfetcher.models import Mail, Eresource
+from mailfetcher.models import Mail
 from django.conf import settings
 from mailfetcher.crons.mailCrawler.analysis.leakage import (
     analyze_mail_connections_for_leakage,
@@ -29,7 +29,8 @@ def kill_openwpm(ignore=[]):
         if proc.pid in ignore:
             continue
         created = time.time() - proc.create_time()
-        #kill only zombie processes that are older than two hours so not to disrupt other processes using openwpm
+        # kill only zombie processes that are older than two
+        # hours so not to disrupt other processes using openwpm
         if proc.name() in ["geckodriver", "firefox", "firefox-bin", "Xvfb"] and created >= 7200 :
             # Kill process tree
             gone, alive = kill_proc_tree(proc.pid)
@@ -80,8 +81,8 @@ def analyzeOnView():
     # Clean up zombie processes
     kill_openwpm()
 
-def analyzeSingleMail(mail):
 
+def analyzeSingleMail(mail):
     init()
     message = email.message_from_string(mail)
     body_html = calc_bodies(message)
@@ -286,3 +287,4 @@ def analyzeLeaks():
             service.resultsdirty = True
             service.save()
         mail.save()
+

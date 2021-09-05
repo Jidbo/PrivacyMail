@@ -232,11 +232,11 @@ def create_service_cache(service, force=False):
 
     try:
         cookies_set_mean = statistics.mean(cookies_per_mail)
-    except:
+    except statistics.StatisticsError:
         cookies_set_mean = 0
     try:
         avg_num_embedded_links = statistics.mean(num_embedded_links)
-    except:
+    except statistics.StatisticsError:
         avg_num_embedded_links = 0
     # TODO When does this happen?
     if avg_num_embedded_links == 0:
@@ -246,12 +246,12 @@ def create_service_cache(service, force=False):
     try:
         avg_personalised_anchor_links = statistics.mean(
             personalised_anchor_links)
-    except:
+    except statistics.StatisticsError:
         avg_personalised_anchor_links = 0
     try:
         avg_personalised_image_links = statistics.mean(
             personalised_image_links)
-    except:
+    except statistics.StatisticsError:
         avg_personalised_image_links = 0
 
     for third_party in third_parties:

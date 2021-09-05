@@ -1,4 +1,5 @@
 from mailfetcher.models import Mail, Eresource
+from util.utils import generate_match_dict
 
 
 def analyze_mail_connections_for_leakage(mail):
@@ -9,13 +10,13 @@ def analyze_mail_connections_for_leakage(mail):
     if mail.h_x_original_to is None:
         print("Did not find mailaddress. Mail: {}".format(mail))
         return
-    hashdict = Mail.generate_match_dict(mail.h_x_original_to)
+    hashdict = generate_match_dict(mail.h_x_original_to)
     for eresource in all_eresources:
         Mail.analyze_eresource(eresource, hashdict)
 
 
 def analyze_single_mail_for_leakage(h_x_original_to, eresources):
-    hashdict = Mail.generate_match_dict(h_x_original_to)
+    hashdict = generate_match_dict(h_x_original_to)
     for eresource in eresources:
         analyze_eresource(eresource, hashdict)
     return eresources

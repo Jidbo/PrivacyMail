@@ -1,20 +1,19 @@
 from __future__ import absolute_import
 
-import base64
 import datetime
 import email
-import hashlib
 import logging
 import re
 import statistics
 import string
 import sys
-import urllib
 from .Thirdparty import Thirdparty
 from .Eresource import Eresource
 from email.header import decode_header, make_header
 from email.utils import parsedate_to_datetime
 from random import choice, randint
+
+from util.utils import inline_diff, generate_match_dict
 
 import html2text
 import tldextract
@@ -101,8 +100,7 @@ class Mail(models.Model):
             " Subject:",
             str(
                 make_header(
-                    decode_header(cls._clear_none_values(
-                        message["subject"])))),
+                    decode_header(message.get("subject", "")))),
         )
         try:
             mail = Mail.objects.get(raw=message_raw)
@@ -238,7 +236,7 @@ class Mail(models.Model):
         self.h_cc = message["Cc"]
         self.h_bcc = message["BCC"]
         self.h_subject = str(make_header(
-            decode_header(self._clear_none_values(message["Subject"]))))
+            decode_header(message.get("Subject", ""))))
         if len(self.h_subject) >= 5000:
             self.h_subject = self.h_subject[:4999]
         self.h_date = message["Date"]
@@ -313,12 +311,6 @@ class Mail(models.Model):
         else:
             return []
 
-    @staticmethod
-    def _clear_none_values(value):
-        if value is None:
-            return ""
-        return value
-
     # Try to get a link for openWPM to click, which isn't an unsubscribe link.
     # In most cases it should be enough to only click one link, because if tracking occurs, every link should track.
     def get_non_unsubscribe_link(self):
@@ -375,7 +367,7 @@ class Mail(models.Model):
         if num_detected_unsub_links < 1:
             message = self.get_message()
             mail_subject = make_header(
-                decode_header(self._clear_none_values(message["Subject"])))
+                decode_header(message.get("Subject", "")))
             logger.debug(
                 "No unsubscribe link was found.",
                 extra={
@@ -460,10 +452,10 @@ class Mail(models.Model):
 
                         # make sure the dicts are only generated once
                         if not hashdictowner:
-                            hashdictowner = self.generate_match_dict(
+                            hashdictowner = generate_match_dict(
                                 owneresource.mail.h_x_original_to)
                         if not hashdictmatch:
-                            hashdictmatch = self.generate_match_dict(
+                            hashdictmatch = generate_match_dict(
                                 matchobject.mail.h_x_original_to)
 
                         Mail.analyze_eresource(owneresource, hashdictowner)
@@ -635,30 +627,9 @@ class Mail(models.Model):
         similarity = ratio(cleaned1, cleaned2)
         differences = ""
         if similarity < 0.9993:
-            differences = Mail.inline_diff(cleaned1, cleaned2)
+            differences = inline_diff(cleaned1, cleaned2)
 
         return similarity, differences
-
-    # From https://stackoverflow.com/questions/774316/python-difflib-highlighting-differences-inline/788780#788780
-    @staticmethod
-    def inline_diff(a, b):
-        import difflib
-
-        matcher = difflib.SequenceMatcher(None, a, b)
-
-        def process_tag(tag, i1, i2, j1, j2):
-            if tag == "replace":
-                return "{" + matcher.a[i1:i2] + " -> " + matcher.b[j1:j2] + "}"
-            if tag == "delete":
-                return "{- " + matcher.a[i1:i2] + "}"
-            if tag == "equal":
-                # return matcher.a[i1:i2]
-                return ""
-            if tag == "insert":
-                return "{+ " + matcher.b[j1:j2] + "}"
-            assert False, "Unknown tag %r" % tag
-
-        return "".join(process_tag(*t) for t in matcher.get_opcodes())
 
     def extract_static_links_of_mail(self):
         if not self.body_html:
@@ -707,62 +678,6 @@ class Mail(models.Model):
                 eresource.save()
                 # print('Found leakage!')
                 # break
-
-    @staticmethod
-    def generate_match_dict(mailaddr):
-        hashdict = {}
-        encdict = {}
-
-        hashdict.update({"Mailaddress": mailaddr})
-        hashdict.update({"Email Account": mailaddr.split("@")[0]})
-        hashdict.update({"Address Domain": mailaddr.split("@")[1]})
-
-        def create_upper_lower(dict, only_up=False):
-            tempdict = {}
-            for key, value in dict.items():
-                if not key.startswith("up"):
-                    tempdict.update({"up(" + key + ")": value.upper()})
-                if only_up:
-                    continue
-                if (not key.startswith("plain") and not key.startswith("low")
-                        and not key.startswith("domain")):
-                    tempdict.update({"low(" + key + ")": value.lower()})
-            return tempdict
-
-        def create_algo_dict(old_dict):
-            algorithms = ["md5", "md4", "sha1", "sha256", "sha512", "sha384"]
-            # Add upper and lower versions to be hashed, but don't add those to the enc dict.
-            # Comparison takes place on casefold URL
-            temp_dict = create_upper_lower(old_dict, True)
-            temp_dict.update(old_dict)
-            new_dict = {}
-            for key, value in temp_dict.items():
-                for algo in algorithms:
-                    h = hashlib.new(algo)
-                    h.update(value.encode("utf8"))
-                    new_dict.update({algo + "(" + key + ")": h.hexdigest()})
-            return new_dict
-
-        hashdict.update(create_algo_dict(hashdict))
-
-        # One level of nesting
-        hashdict.update(create_algo_dict(hashdict))
-
-        encdict = {}
-
-        for key, val in hashdict.items():
-            encdict.update({
-                "base64(" + key + ")":
-                base64.b64encode(val.encode("utf8")).decode(
-                    "utf-8", "replace")
-            })
-
-        encdict.update({"urlencode(plain)": urllib.parse.quote(mailaddr)})
-
-        # put dicts together
-        hashdict.update(encdict)
-
-        return hashdict
 
     def check_for_approved_identity(self):
         """
