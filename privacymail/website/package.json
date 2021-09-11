@@ -21,6 +21,7 @@
         "i18next": "^19.3.4",
         "i18next-browser-languagedetector": "^4.0.2",
         "is-valid-domain": "0.0.14",
+        "lint-staged": "^11.1.2",
         "query-string": "^6.11.1",
         "react": "^16.13.1",
         "react-collapsible": "^2.7.0",
@@ -64,9 +65,12 @@
     },
     "husky": {
         "hooks": {
-            "pre-commit": "prettier --write 'src/**/*.js' 'src/**/*.json' 'src/**/*.ts' 'src/**/*.tsx'"
+            "pre-commit": "lint-staged"
         }
     },
+	"lint-staged": {
+	  "src/**/*.{js,json,ts,tsx,jsx}": "prettier --write"
+	},
     "browserslist": {
         "production": [
             ">0.2%",
