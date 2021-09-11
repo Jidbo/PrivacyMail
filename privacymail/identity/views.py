@@ -164,7 +164,8 @@ class ServiceView(View):
             sid = kwargs["service"]
         except KeyError:
             try:
-                sid = self.parseUrlToId(request.GET.get("url"))
+                domain = validate_domain(request.GET.get("url"))
+                sid = Service.objects.get(url=domain).id
             except:
                 return HttpResponseNotFound("newsletter not found")
 
@@ -180,12 +181,6 @@ class ServiceView(View):
         return JsonResponse(
             convertForJsonResponse(self.render_service(request, service))
         )
-
-    @staticmethod
-    def parseUrlToId(url):
-        domain = validate_domain(url)
-        service = Service.objects.get(url=domain)
-        return service.id
 
     @staticmethod
     def render_service(request, service, form=None):
