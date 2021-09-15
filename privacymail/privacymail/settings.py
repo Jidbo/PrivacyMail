@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import sys
-from raven.transport.requests import RequestsHTTPTransport
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
@@ -36,6 +37,8 @@ ALLOWED_HOSTS = [os.getenv("ALLOWED_HOST")]
 
 MAXIMUM_ALLOWED_EMAIL_ANALYSIS_ONDEMAND = int(os.getenv("MAXIMUM_ALLOWED_EMAIL_ANALYSIS_ONDEMAND"))
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -53,7 +56,6 @@ INSTALLED_APPS = [
     "identity",
     "api",
     "django_tables2",
-    "raven.contrib.django.raven_compat",
     "django_extensions",
     "django_filters",
     "bootstrap4",
@@ -297,52 +299,51 @@ SILKY_PYTHON_PROFILER = True
 SILKY_AUTHENTICATION = True  # User must login
 SILKY_AUTHORISATION = True  # User must have permissions
 
-RAVEN_CONFIG = {
-    "dsn": os.getenv("RAVEN_DSN"),
-    # If you are using git, you can also automatically configure the
-    # release based on the git info.
-    "release": "2.1",
-    "transport": RequestsHTTPTransport,
-}
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "root": {
-        "level": "WARNING",
-        "handlers": ["sentry"],
-    },
-    "formatters": {
-        "verbose": {
-            "format": (
-                "%(levelname)s %(asctime)s %(module)s %(process)d "
-                "%(thread)d %(message)s"
-            )
-        },
-        "console": {
-            "format": "[%(asctime)s][%(levelname)s] " "%(message)s",
-            "datefmt": "%H:%M:%S",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "console",
-        },
-        "sentry": {
-            "level": "WARNING",
-            "class": ("raven.contrib.django.raven_compat.handlers." "SentryHandler"),
-        },
-    },
-    "loggers": {
-        "mailfetcher": {"level": "ERROR", "handlers": ["sentry"], "propagate": False},
-        "identity": {"level": "ERROR", "handlers": ["sentry"], "propagate": False},
-        "OpenWPM.automation.MPLogger": {
-            "level": "ERROR",
-            "handlers": ["console"],
-            "propagate": False,
-        },
-        "cron": {"level": "ERROR", "handlers": ["sentry"], "propagate": False},
-    },
-}
+sentry_sdk.init(
+    dsn=os.getenv("RAVEN_DSN"),
+    integrations=[DjangoIntegration()],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True,
+    # By default the SDK will try to use the SENTRY_RELEASE
+    # environment variable, or infer a git commit
+    # SHA as release, however you may want to set
+    # something more human-readable.
+    # release="myapp@1.0.0",
+)
+
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "verbose": {
+#             "format": (
+#                 "%(levelname)s %(asctime)s %(module)s %(process)d "
+#                 "%(thread)d %(message)s"
+#             )
+#         },
+#         "console": {
+#             "format": "[%(asctime)s][%(levelname)s] " "%(message)s",
+#             "datefmt": "%H:%M:%S",
+#         },
+#     },
+#     "handlers": {
+#         "console": {
+#             "level": "INFO",
+#             "class": "logging.StreamHandler",
+#             "formatter": "console",
+#         },
+#     },
+#     "loggers": {
+#         "OpenWPM.automation.MPLogger": {
+#             "level": "ERROR",
+#             "handlers": ["console"],
+#             "propagate": False,
+#         },
+#     },
+# }
