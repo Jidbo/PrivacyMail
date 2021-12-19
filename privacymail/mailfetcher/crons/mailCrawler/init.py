@@ -2,7 +2,7 @@ import threading
 import http.server
 import socket
 from contextlib import closing
-from django.core.cache import cache
+from mailfetcher.models import Cache
 
 
 def check_socket(host, port):
@@ -15,7 +15,7 @@ def check_socket(host, port):
 
 # This initizes the cronjob server
 def init():
-    cache.delete("ImapFetcher")
+    Cache.delete("ImapFetcher")
 
     PORT = 5000
     DIRECTORY = "/tmp/"

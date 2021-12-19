@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.core.cache import cache
+from mailfetcher.models import Cache
 from identity.models import Service
 from mailfetcher.models import Thirdparty
 import multiprocessing
@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         if not options['no-clear']:
-            cache.clear()
+            Cache.clear()
             self.stdout.write("Cleared cache\n")
 
         create_summary_cache(force=True)

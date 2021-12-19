@@ -1,7 +1,7 @@
 import statistics
 import logging
 from django.db.models import Q
-from django.core.cache import cache
+from mailfetcher.models import Cache
 from datetime import datetime
 from mailfetcher.models import Mail, Eresource, Thirdparty
 from identity.models import Identity, ServiceThirdPartyEmbeds, Service
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_summary_cache(force=False):
-    site_params = cache.get("result_summary")
+    site_params = Cache.get("result_summary")
     if site_params is not None and not force:
         if not site_params["cache_dirty"]:
             return
@@ -93,11 +93,11 @@ def create_summary_cache(force=False):
         "cache_timestamp": datetime.now().time(),
     }
     # Cache the result
-    cache.set("result_summary", site_params)
+    Cache.set("result_summary", site_params)
 
 
 def create_third_party_cache(thirdparty, force=False):
-    site_params = cache.get(thirdparty.derive_thirdparty_cache_path())
+    site_params = Cache.get(thirdparty.derive_thirdparty_cache_path())
     if site_params is not None and not force:
         if not site_params["cache_dirty"]:
             return
@@ -142,12 +142,12 @@ def create_third_party_cache(thirdparty, force=False):
         "cache_timestamp": datetime.now().time(),
     }
     # Cache the result
-    cache.set(thirdparty.derive_thirdparty_cache_path(), site_params)
+    Cache.set(thirdparty.derive_thirdparty_cache_path(), site_params)
 
 
 def create_service_cache(service, force=False):
-    site_params = cache.get(service.derive_service_cache_path())
-    service_information = cache.get(service.derive_service_information_cache())
+    site_params = Cache.get(service.derive_service_cache_path())
+    service_information = Cache.get(service.derive_service_information_cache())
 
     if service_information and not force:
         third_parties_dict = service_information["third_parties_dict"]
@@ -309,5 +309,5 @@ def create_service_cache(service, force=False):
         "algos": algos
     }
     # Cache the result
-    cache.set(service.derive_service_cache_path(), site_params)
-    cache.set(service.derive_service_information_cache(), service_information)
+    Cache.set(service.derive_service_cache_path(), site_params)
+    Cache.set(service.derive_service_information_cache(), service_information)

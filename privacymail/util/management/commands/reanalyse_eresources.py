@@ -1,9 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.core.cache import cache
-from identity.models import Service
-from mailfetcher.models import Thirdparty, Mail, Eresource
-from mailfetcher.analyser_cron import thesis_link_personalisation_of_services
-from identity.views import ServiceView
+from mailfetcher.models import Mail
 import traceback
 from mailfetcher.crons.mailCrawler.analysis.leakage import (
     analyze_mail_connections_for_leakage,

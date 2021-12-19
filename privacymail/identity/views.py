@@ -7,8 +7,8 @@ from identity.filters import ServiceFilter
 from identity.tables import ServiceTable
 from mailfetcher.models import Mail, Thirdparty
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.cache import cache
 from django.shortcuts import redirect
+from mailfetcher.models import Cache
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableMixin
 from django.conf import settings
@@ -228,7 +228,7 @@ class ServiceView(View):
         start_time = time.time()
         if force_makecache:
             analyser_cron.create_service_cache(service, force=True)
-        site_params = cache.get(service.derive_service_cache_path())
+        site_params = Cache.get(service.derive_service_cache_path())
         if site_params is None:
             return None
 
@@ -342,7 +342,7 @@ class EmbedView(View):
 
     @staticmethod
     def get_embed_site_params(embed):
-        site_params = cache.get(embed.derive_thirdparty_cache_path())
+        site_params = Cache.get(embed.derive_thirdparty_cache_path())
 
         if site_params is None:
             return None

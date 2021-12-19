@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from identity.util import validate_domain
 from django.conf import settings
-from django.core.cache import cache
+from mailfetcher.models import Cache
 from identity.models import Identity, Service
 from mailfetcher.analyser_cron import create_service_cache
 from mailfetcher.crons.mailCrawler.openWPM import analyzeSingleMail
@@ -91,7 +91,7 @@ class AnalysisView(View):
 
     def post(self, request, *args, **kwargs):
 
-        queue = cache.get("onDemand_analysis_queue")
+        queue = Cache.get("onDemand_analysis_queue")
         if queue is None:
             queue = {}
         print(settings.MAXIMUM_ALLOWED_EMAIL_ANALYSIS_ONDEMAND)
@@ -100,16 +100,16 @@ class AnalysisView(View):
         else:
             analysis_id = str(uuid.uuid4())
             queue[analysis_id] = analysis_id
-            cache.set("onDemand_analysis_queue", queue)
+            Cache.set("onDemand_analysis_queue", queue)
             try:
                 body_unicode = request.body.decode("utf-8")
                 body_json = json.loads(body_unicode)
                 message = body_json["rawData"]
                 stats = analyzeSingleMail(message)
                 queue.pop(analysis_id, None)
-                cache.set("onDemand_analysis_queue", queue)
+                Cache.set("onDemand_analysis_queue", queue)
                 return JsonResponse(stats)
             except:
                 queue.pop(analysis_id, None)
-                cache.set("onDemand_analysis_queue", queue)
+                Cache.set("onDemand_analysis_queue", queue)
                 raise

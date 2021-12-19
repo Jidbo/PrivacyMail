@@ -6,13 +6,12 @@ from identity.rating.loadedResources import calculateCDNs
 from identity.rating.ABTesting import calculateABTesting
 from identity.rating.calculate import calculateRating, calculateAccumulativeRating
 
-
 from identity.models import ServiceThirdPartyEmbeds
-
 
 from identity.models import Identity
 from mailfetcher.models import Mail
 
+from datetime import timedelta
 
 import time
 from django.utils import timezone
@@ -94,88 +93,94 @@ def getMailRating(mail):
     try:
         service = mail.identity.first().service
         embeds = ServiceThirdPartyEmbeds.objects.filter(mail=mail)
-        embeds_onview = embeds.filter(embed_type=ServiceThirdPartyEmbeds.ONVIEW)
-        embeds_onclick = embeds.filter(embed_type=ServiceThirdPartyEmbeds.ONCLICK)
+        embeds_onview = embeds.filter(
+            embed_type=ServiceThirdPartyEmbeds.ONVIEW)
+        embeds_onclick = embeds.filter(
+            embed_type=ServiceThirdPartyEmbeds.ONCLICK)
 
         category_rating = {
-            "emailLeaks": calculateEmailLeaks(
-                service, embeds , weights["emailLeaks"], rMin["emailLeaks"], rMax["emailLeaks"]
-            ),
-            "personalizedLinks": calculatePersonalizedLinks(
+            "emailLeaks":
+            calculateEmailLeaks(service, embeds, weights["emailLeaks"],
+                                rMin["emailLeaks"], rMax["emailLeaks"]),
+            "personalizedLinks":
+            calculatePersonalizedLinks(
                 embeds,
                 service,
                 weights["personalizedLinks"],
                 rMin["personalizedLinks"],
                 rMax["personalizedLinks"],
             ),
-            "unpersonalizedLinks": calculateUnpersonalizedLinks(
-                embeds, 
+            "unpersonalizedLinks":
+            calculateUnpersonalizedLinks(
+                embeds,
                 service,
                 weights["unpersonalizedLinks"],
                 rMin["unpersonalizedLinks"],
                 rMax["unpersonalizedLinks"],
             ),
-            "trackingServices": calculateTrackingServices(
-                embeds, 
+            "trackingServices":
+            calculateTrackingServices(
+                embeds,
                 service,
                 weights["trackingServices"],
                 rMin["trackingServices"],
                 rMax["trackingServices"],
             ),
-            "loadedResources": calculateCDNs(
-                embeds, 
+            "loadedResources":
+            calculateCDNs(
+                embeds,
                 service,
                 weights["loadedResources"],
                 rMin["loadedResources"],
                 rMax["loadedResources"],
             ),
-            "ABTesting": calculateABTesting(
-                service, weights["ABTesting"], rMin["ABTesting"], rMax["ABTesting"]
-            ),
+            "ABTesting":
+            calculateABTesting(service, weights["ABTesting"],
+                               rMin["ABTesting"], rMax["ABTesting"]),
         }
 
         return calculateRating(category_rating)
     except:
         return {"rating": 0, "penalty": 0}
-    
+
 
 def getAdjustedRating(service):
 
     start = time.time()
 
-
     idents = Identity.objects.filter(service=service, is_dead=False)
 
     identityMailRatings = {}
 
-    for identity in idents: 
+    for identity in idents:
 
         mails = Mail.objects.filter(
             identity=identity,
             identity__approved=True,
             processing_state="DONE",
         ).distinct().order_by("-date_time")
-        
-        past180Days = timedelta(days=180)
-        dateFilteredMails = mails.filter(date_time = timezone.now() - past180Days)
 
-        if dateFilteredMails.count() < 10 :
+        past180Days = timedelta(days=180)
+        dateFilteredMails = mails.filter(date_time=timezone.now() -
+                                         past180Days)
+
+        if dateFilteredMails.count() < 10:
             mails = mails[:10]
         else:
             mails = dateFilteredMails
-                
+
         identityMailRatings[identity] = {}
 
-        for mail in mails: 
+        for mail in mails:
             identityMailRatings[identity][mail] = getMailRating(mail)
 
     rating = calculateAccumulativeRating(identityMailRatings)
 
-
     end = time.time()
-    delta = (end -start) / 1000
+    delta = (end - start) / 1000
 
     if delta > 1:
-        print("Building Rating for ",service.name , " took " , delta , " seconds")
+        print("Building Rating for ", service.name, " took ", delta,
+              " seconds")
 
     return rating
